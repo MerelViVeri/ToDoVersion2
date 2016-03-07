@@ -13,22 +13,23 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * Author: Merel van den Hurk
  * App name: To Do
- * App description: app keeps track of to do's as entered by user. Retains list
- * on orientation change and closing. Simple click strikes through an item,
- * long click deletes it from the list.
- *
- * NOTE: resuming after closing works on emulator but does not seem to work on own phone.
- * I tried to fix this but after three hours of puzzling I still couldn't find a way that
- * wasn't just blind copy-paste from Google (which is bad form), so I left it this way.
+ * App description: app keeps track of to do's as entered by user based on chosen list.
+ * Writes items to JSON upon closing and uses this to restore.
  */
 
-public class MainActivity extends AppCompatActivity {
+// TODO find out which activity opens after closing
+// TODO implement JSON: keep track of lists and their titles and corresponding items and counts
+    // TODO each list as "sub-objects" within one big object called allLists
+
+public class Items extends AppCompatActivity {
 
     // initialize variables
     ArrayAdapter<String> arrayAdapter;
@@ -51,6 +52,22 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             listArray = savedInstanceState.getStringArrayList("ARRAY_LIST");
         } else {
+            // if file exists
+            Scanner scan = null;
+            try {
+                // TODO adapt reading for multiple lists handling
+                // TODO parse JSON if needed?
+                scan = new Scanner(openFileInput("listsave.txt"));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            assert scan != null;
+            while (scan.hasNextLine()) {
+                String line = scan.nextLine();
+                listArray.add(line);
+            }
+
+            // if file doesn't exist
             listArray = new ArrayList<>();
         }
 
@@ -66,22 +83,6 @@ public class MainActivity extends AppCompatActivity {
                 listArray.remove(item);
                 arrayAdapter.notifyDataSetChanged();
                 return false;
-            }
-        });
-
-        /**
-         * This doesn't work properly but I still leave it in. The goal is to simply strike through
-         * any items upon a normal click, but I couldn't find an easy way to undo this and it also
-         * strikes through items below items that get removed (because of the lingering longClick).
-         * Might have found a solution with some more Googling, perhaps adding checked/unchecked
-         * booleans to individual items somehow and using if-else statements to fix it.
-         */
-        toDoList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                TextView item = (TextView) toDoList.getChildAt(position);
-                item.setPaintFlags(item.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-                arrayAdapter.notifyDataSetChanged();
             }
         });
     }
@@ -106,5 +107,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         listArray = savedInstanceState.getStringArrayList("ARRAY_LIST");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        writeFile(listArray);
+    }
+
+    protected void writeFile(ArrayList array) {
+        PrintStream out = null;
+        // TODO change: adapt for JSON object and write _that_ to listsave.txt
+        try {
+            out = new PrintStream(openFileOutput("listsave.txt", MODE_PRIVATE));
+            // TODO write for each loop for writing
+                out.println();
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

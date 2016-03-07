@@ -3,4 +3,6 @@
     <string name="title">To Do List</string>
     <string name="buttonText">Add</string>
     <string name="addNewHint">Add new item...</string>
+    <string name="listsTitle">Your Lists</string>
+    <string name="addListsHint">Add new list...</string>
 </resources>
